@@ -13,7 +13,7 @@ const PORT = process.env.PORT ?? 3000
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
-  database: "mydb",
+  database: "ecommerce_db",
   password: "postgres",
   port: 5432
 })
@@ -22,6 +22,7 @@ app.get("/", (req, res) => {
   res.send("API works")
 })
 
+// ?page ?limit
 app.get("/api/products", async (req, res) => {
   const page = Number(req.query.page) || 1
   const limit = Number(req.query.limit) || 10
@@ -47,6 +48,7 @@ app.get("/api/products/:id", async (req, res) => {
   res.json(result.rows[0])
 })
 
+// ?min
 app.get("/api/products/discount", async (req, res) => {
   const min = Number(req.query.min) || 1
 
@@ -58,8 +60,9 @@ app.get("/api/products/discount", async (req, res) => {
   res.json(result.rows)
 })
 
+// ?q
 app.get("/api/products/search", async (req, res) => {
-  const query = req.query.query
+  const query = req.query.q
 
   const result = await pool.query(
     "SELECT * FROM products WHERE name ILIKE $1",
