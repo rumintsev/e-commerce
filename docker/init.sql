@@ -3,8 +3,8 @@
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name TEXT,
-  email TEXT UNIQUE,
-  password TEXT,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   role TEXT
 );
@@ -46,8 +46,8 @@ CREATE TABLE order_items (
 
 -- TEST DATA
 INSERT INTO users (name, email, password, role) VALUES
-('Admin', 'admin@test.com', 'password', 'admin'),
-('User', 'user@test.com', 'password', 'user');
+('Admin', 'admin@test.com', '$2b$10$fVvjhi7okak2Gh7AO8usHeFn3MDJw3hiF9QcKHchdC/LfjmceiNJK', 'admin'),
+('User', 'user@test.com', '$2b$10$fVvjhi7okak2Gh7AO8usHeFn3MDJw3hiF9QcKHchdC/LfjmceiNJK', 'user');
 
 INSERT INTO products (name, description, price, discount_percent, quantity, image_url) VALUES
 ('Apples', 'Juicy apples', 2.35, 10, 5, 'img1.jpg'),

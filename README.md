@@ -18,3 +18,10 @@ npm run start
 ```
 docker compose down -v
 ```
+
+## Отчистить бд (инициализация бд)
+
+```
+docker compose down -v
+docker compose up -d
+```
