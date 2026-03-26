@@ -3,6 +3,7 @@ import cors from "cors"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { Pool } from "pg"
+import type { Request, Response, NextFunction } from "express"
 
 const app = express()
 
@@ -21,11 +22,50 @@ const pool = new Pool({
 	port: 5432
 })
 
+const SECRET = process.env.JWT_SECRET || "secret"
+
+const auth = (req: Request, res: Response, next: NextFunction) => {
+
+	const header = req.headers.authorization
+	if (!header || !header.startsWith("Bearer ")) {
+		return res.status(401).json({ message: "unauthorized" })
+	}
+
+	const token = header.split(" ")[1]
+	if (!token) {
+		return res.status(401).json({ message: "unauthorized" })
+	}
+	
+	try {
+		const payload = jwt.verify(token, SECRET)
+
+		if (
+			typeof payload !== "object" ||
+			payload === null ||
+			!("userId" in payload) ||
+			!("role" in payload)
+		) {
+			return res.status(401).json({ message: "invalid token payload" })
+		}
+
+		res.locals.user = payload
+
+		next()
+	} catch (e) {
+		return res.status(401).json({ message: "invalid token" })
+	}
+}
+
+const adminOnly = (req: Request, res: Response, next: NextFunction) => {
+	if (res.locals.user.role !== "admin") {
+		return res.status(403).json({ message: "forbidden" })
+	}
+	next()
+}
+
 app.get("/", (req, res) => {
 	res.send("API works")
 })
-
-const SECRET = process.env.JWT_SECRET || "secret"
 
 app.post("/auth/register", async (req, res) => {
 	const { name, email, password } = req.body || {}
@@ -45,7 +85,20 @@ app.post("/auth/register", async (req, res) => {
 			[name, email, hashedPassword, "user"]
 		)
 
-		res.json(result.rows[0])
+		const user = result.rows[0]
+
+		const token = jwt.sign(
+			{ userId: user.id },
+			SECRET,
+			{ expiresIn: "1h" }
+		)
+
+		res.json({
+			token,
+			email: user.email,
+			name: user.name,
+			role: user.role
+		})
 	} catch (e) {
 		res.status(400).json({ message: "user already exists" })
 	}
@@ -78,7 +131,7 @@ app.post("/auth/login", async (req, res) => {
 	}
 
 	const token = jwt.sign(
-		{ userId: user.id },
+		{ userId: user.id, role: user.role },
 		SECRET,
 		{ expiresIn: "1h" }
 	)
@@ -136,28 +189,28 @@ app.get("/products/search", async (req, res) => {
 	res.json(result.rows)
 })
 
-app.get("/cart/:user_id", async (req, res) => {
-	const { user_id } = req.params
+app.get("/cart", auth, async (req, res) => {
+	const userId = res.locals.user.userId
 
 	const result = await pool.query(
 		`
-    SELECT cart_items.*, products.name, products.price
-    FROM cart_items
-    JOIN products ON products.id = cart_items.product_id
-    WHERE cart_items.user_id = $1
-    `,
-		[user_id]
+		SELECT cart_items.*, products.name, products.price
+		FROM cart_items
+		JOIN products ON products.id = cart_items.product_id
+		WHERE cart_items.user_id = $1
+		`,
+		[userId]
 	)
 
 	res.json(result.rows)
 })
 
-app.get("/orders/user/:user_id", async (req, res) => {
-	const { user_id } = req.params
+app.get("/orders/user", auth, async (req, res) => {
+	const userId = res.locals.user.userId
 
 	const result = await pool.query(
 		"SELECT * FROM orders WHERE user_id = $1",
-		[user_id]
+		[userId]
 	)
 
 	res.json(result.rows)

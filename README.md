@@ -13,6 +13,10 @@ npm run build
 npm run start
 ```
 
+При инициализации есть 2 пользователя: user@test.com, admin@test.com, 
+у обоих пароль -- password, если const SECRET = "secret", 
+при замене на process.env.JWT_SECRET пароли в базе нужно поменять
+
 ## Заверщение работы контейнера с бд
 
 ```
