@@ -16,6 +16,7 @@ CREATE TABLE products (
   price NUMERIC,
   discount_percent INT,
 	quantity INT,
+	visibility BOOLEAN DEFAULT TRUE,
   image_url TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -49,10 +50,11 @@ INSERT INTO users (name, email, password, role) VALUES
 ('Admin', 'admin@test.com', '$2b$10$fVvjhi7okak2Gh7AO8usHeFn3MDJw3hiF9QcKHchdC/LfjmceiNJK', 'admin'),
 ('User', 'user@test.com', '$2b$10$fVvjhi7okak2Gh7AO8usHeFn3MDJw3hiF9QcKHchdC/LfjmceiNJK', 'user');
 
-INSERT INTO products (name, description, price, discount_percent, quantity, image_url) VALUES
-('Apples', 'Juicy apples', 2.35, 10, 5, 'img1.jpg'),
-('Bananas', 'Juicy bananas', 1.25, 5, 2, 'img2.jpg'),
-('Grapes', 'Juicy grapes', 3.75, 0, 1, 'img3.jpg');
+INSERT INTO products (name, description, price, discount_percent, quantity, visibility, image_url) VALUES
+('Apples', 'Juicy apples', 2.35, 10, 5, TRUE,'img1.jpg'),
+('Bananas', 'Juicy bananas', 1.25, 5, 2, TRUE, 'img2.jpg'),
+('Grapes', 'Juicy grapes', 3.75, 0, 1, TRUE, 'img3.jpg'),
+('Grapefruit', 'Juicy Grapefruits', 3.75, 0, 1, FALSE, 'img4.jpg');
 
 INSERT INTO cart_items (user_id, product_id, quantity) VALUES
 (1, 1, 1),

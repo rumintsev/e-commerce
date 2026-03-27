@@ -9,11 +9,12 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
-app.use(express.urlencoded({ extended: true })) // для x-www-form-urlencoded
+// для x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }))
 
 const PORT = process.env.PORT ?? 3000
 
-// подключение к postgres
+// подключение к postgreSQL
 const pool = new Pool({
 	user: "postgres",
 	host: "localhost",
@@ -22,6 +23,22 @@ const pool = new Pool({
 	port: 5432
 })
 
+// проверка подключения к postgreSQL
+async function start() {
+	try {
+		await pool.query("SELECT 1");
+		console.log("db connected");
+	} catch (e) {
+		console.error("db connection failed");
+		process.exit(1);
+	}
+}
+
+start();
+
+// секрет, котоырй шифрует пароли, если он будет известен, 
+// и будет слив бд, пароли будут расшифрованы в том виде, 
+// в котором их вводили пользователи
 const SECRET = process.env.JWT_SECRET || "secret"
 
 const auth = (req: Request, res: Response, next: NextFunction) => {
@@ -35,7 +52,7 @@ const auth = (req: Request, res: Response, next: NextFunction) => {
 	if (!token) {
 		return res.status(401).json({ message: "unauthorized" })
 	}
-	
+
 	try {
 		const payload = jwt.verify(token, SECRET)
 
@@ -60,6 +77,26 @@ const adminOnly = (req: Request, res: Response, next: NextFunction) => {
 	if (res.locals.user.role !== "admin") {
 		return res.status(403).json({ message: "forbidden" })
 	}
+	next()
+}
+
+const authOptional = (req: Request, res: Response, next: NextFunction) => {
+	const header = req.headers.authorization
+	if (!header || !header.startsWith("Bearer ")) {
+		return next()
+	}
+
+	const token = header.split(" ")[1]
+	if (!token) return next()
+
+	try {
+		const payload = jwt.verify(token, SECRET)
+		if (typeof payload === "object" && payload && "userId" in payload && "role" in payload) {
+			res.locals.user = payload
+		}
+	} catch (e) {
+	}
+
 	next()
 }
 
@@ -139,54 +176,124 @@ app.post("/auth/login", async (req, res) => {
 	res.json({ token, email, name: user.name, role: user.role })
 })
 
-// ?page ?limit
-app.get("/products", async (req, res) => {
-	const page = Number(req.query.page) || 1
-	const limit = Number(req.query.limit) || 10
+// ?page ?limit ?q ?discount
+app.get("/products", authOptional, async (req, res) => {
+	try {
+		const page = Number(req.query.page) || 1
+		const limit = Number(req.query.limit) || 10
+		const offset = (page - 1) * limit
+		const q = typeof req.query.q === "string" ? req.query.q : null
+		const discount = Number(req.query.discount)
+		const user = res.locals.user
 
-	const offset = (page - 1) * limit
+		const conditions: string[] = []
+		const values: any[] = []
 
-	const result = await pool.query(
-		"SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2",
-		[limit, offset]
-	)
+		if (!isNaN(discount)) {
+			values.push(discount)
+			conditions.push(`discount_percent >= $${values.length}`)
+		}
 
-	res.json(result.rows)
+		if (q) {
+			// % -- любые символы перед и после
+			values.push(`%${q}%`)
+			// ILIKE — игнорирует регистр
+			conditions.push(`name ILIKE $${values.length}`)
+		}
+
+		if (!user || user.role !== "admin") {
+			conditions.push(`visibility = true`)
+		}
+
+		const where = conditions.length
+			? `WHERE ${conditions.join(" AND ")}`
+			: ""
+
+		values.push(limit)
+		values.push(offset)
+
+		const result = await pool.query(
+			`
+      SELECT *
+      FROM products
+      ${where}
+      ORDER BY id
+      LIMIT $${values.length - 1}
+      OFFSET $${values.length}
+      `,
+			values
+		)
+
+		res.json(result.rows)
+	} catch (err) {
+		console.error(err)
+		res.status(500).json({ message: "database error" })
+	}
 })
 
-app.get("/products/:id", async (req, res) => {
-	const { id } = req.params
+// должен стоять после /products, 
+// иначе будет перехватывть его запросы
+app.get("/products/:id", authOptional, async (req, res) => {
+	const id = Number(req.params.id)
+	if (isNaN(id)) return res.status(400).json({ message: "invalid id" })
+
+	const user = res.locals.user
+	const conditions = [`id = $1`]
+	const values = [id]
+
+	if (!user || user.role !== "admin") {
+    conditions.push(`visibility = true`)
+  }
+
+  const result = await pool.query(
+    `SELECT * FROM products WHERE ${conditions.join(" AND ")}`,
+    values
+  )
+
+	res.json(result.rows[0] || {})
+})
+
+app.post("/products", adminOnly, async (req, res) => {
+	const { name, description, price, discount_percent, image_url } = req.body
 
 	const result = await pool.query(
-		"SELECT * FROM products WHERE id = $1",
-		[id]
+		`
+    INSERT INTO products(name,description,price,discount_percent,image_url)
+    VALUES ($1,$2,$3,$4,$5)
+    RETURNING *
+    `,
+		[name, description, price, discount_percent, image_url]
 	)
 
 	res.json(result.rows[0])
 })
 
-// ?min
-app.get("/products/discount", async (req, res) => {
-	const min = Number(req.query.min) || 1
+app.put("/products/:id", adminOnly, async (req, res) => {
+	const { id } = req.params
+	const { name, description, price, discount_percent } = req.body
 
 	const result = await pool.query(
-		"SELECT * FROM products WHERE discount_percent >= $1",
-		[min]
+		`
+    UPDATE products
+    SET name=$1, description=$2, price=$3, discount_percent=$4
+    WHERE id=$5
+    RETURNING *
+    `,
+		[name, description, price, discount_percent, id]
 	)
 
-	res.json(result.rows)
+	res.json(result.rows[0])
 })
 
-// ?q
-app.get("/products/search", async (req, res) => {
-	const query = req.query.q
+app.delete("/products/:id", adminOnly, async (req, res) => {
+	const { id } = req.params
 
-	const result = await pool.query(
-		"SELECT * FROM products WHERE name ILIKE $1",
-		[`%${query}%`]
+	await pool.query(
+		"DELETE FROM products WHERE id=$1",
+		[id]
 	)
 
-	res.json(result.rows)
+	res.json({ message: "product deleted" })
 })
 
 app.get("/cart", auth, async (req, res) => {
@@ -216,50 +323,7 @@ app.get("/orders/user", auth, async (req, res) => {
 	res.json(result.rows)
 })
 
-app.post("/admin/products", async (req, res) => {
-	const { name, description, price, discount_percent, image_url } = req.body
-
-	const result = await pool.query(
-		`
-    INSERT INTO products(name,description,price,discount_percent,image_url)
-    VALUES ($1,$2,$3,$4,$5)
-    RETURNING *
-    `,
-		[name, description, price, discount_percent, image_url]
-	)
-
-	res.json(result.rows[0])
-})
-
-app.put("/admin/products/:id", async (req, res) => {
-	const { id } = req.params
-	const { name, description, price, discount_percent } = req.body
-
-	const result = await pool.query(
-		`
-    UPDATE products
-    SET name=$1, description=$2, price=$3, discount_percent=$4
-    WHERE id=$5
-    RETURNING *
-    `,
-		[name, description, price, discount_percent, id]
-	)
-
-	res.json(result.rows[0])
-})
-
-app.delete("/admin/products/:id", async (req, res) => {
-	const { id } = req.params
-
-	await pool.query(
-		"DELETE FROM products WHERE id=$1",
-		[id]
-	)
-
-	res.json({ message: "product deleted" })
-})
-
-app.post("/cart/add", async (req, res) => {
+app.post("/cart/add", auth, async (req, res) => {
 	const { user_id, product_id, quantity } = req.body
 
 	const result = await pool.query(
@@ -274,7 +338,7 @@ app.post("/cart/add", async (req, res) => {
 	res.json(result.rows[0])
 })
 
-app.post("/orders", async (req, res) => {
+app.post("/orders", auth, async (req, res) => {
 	const { user_id, total_price } = req.body
 
 	const result = await pool.query(
