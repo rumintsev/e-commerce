@@ -11,20 +11,19 @@ CREATE TABLE users (
 
 CREATE TABLE products (
   id SERIAL PRIMARY KEY,
-  name TEXT,
-  description TEXT,
-  price NUMERIC,
-  discount_percent INT,
-	quantity INT,
+  name TEXT DEFAULT 'Название',
+  description TEXT DEFAULT 'Описание',
+  price NUMERIC DEFAULT 0,
+  discount_percent INT DEFAULT 0,
+	quantity INT DEFAULT 0,
 	visibility BOOLEAN DEFAULT TRUE,
-  image_url TEXT,
+  image_url TEXT DEFAULT 'default.png',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE cart_items (
   id SERIAL PRIMARY KEY,
   user_id INT,
-  guest_id TEXT,
   product_id INT,
   quantity INT
 );

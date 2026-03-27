@@ -242,51 +242,86 @@ app.get("/products/:id", authOptional, async (req, res) => {
 	const values = [id]
 
 	if (!user || user.role !== "admin") {
-    conditions.push(`visibility = true`)
-  }
+		conditions.push(`visibility = true`)
+	}
 
-  const result = await pool.query(
-    `SELECT * FROM products WHERE ${conditions.join(" AND ")}`,
-    values
-  )
+	const result = await pool.query(
+		`SELECT * FROM products WHERE ${conditions.join(" AND ")}`,
+		values
+	)
 
 	res.json(result.rows[0] || {})
 })
 
-app.post("/products", adminOnly, async (req, res) => {
-	const { name, description, price, discount_percent, image_url } = req.body
+app.post("/products", auth, adminOnly, async (req, res) => {
+	const {
+		name = "Название",
+		description = "Описание",
+		price = 0,
+		discount_percent = 0,
+		quantity = 0,
+		visibility = false,
+		image_url = "default.png"
+	} = req.body || {}
 
 	const result = await pool.query(
 		`
-    INSERT INTO products(name,description,price,discount_percent,image_url)
-    VALUES ($1,$2,$3,$4,$5)
+    INSERT INTO products(name,description,price,discount_percent,quantity,visibility,image_url)
+    VALUES ($1,$2,$3,$4,$5,$6,$7)
     RETURNING *
     `,
-		[name, description, price, discount_percent, image_url]
+		[name, description, price, discount_percent, quantity, visibility, image_url]
 	)
 
 	res.json(result.rows[0])
 })
 
-app.put("/products/:id", adminOnly, async (req, res) => {
-	const { id } = req.params
-	const { name, description, price, discount_percent } = req.body
+app.put("/products/:id", auth, adminOnly, async (req, res) => {
+	const id = Number(req.params.id)
+	if (isNaN(id)) return res.status(400).json({ message: "invalid id" })
+
+	const allowedFields = [
+		"name",
+		"description",
+		"price",
+		"discount_percent",
+		"quantity",
+		"visibility",
+		"image_url"
+	]
+
+	const updates: string[] = []
+	const values: any[] = []
+
+	for (const field of allowedFields) {
+		if (req.body?.[field] !== undefined) {
+			values.push(req.body[field])
+			updates.push(`${field} = $${values.length}`)
+		}
+	}
+
+	if (updates.length === 0) {
+		return res.status(400).json({ message: "no fields to update" })
+	}
+
+	values.push(id)
 
 	const result = await pool.query(
 		`
     UPDATE products
-    SET name=$1, description=$2, price=$3, discount_percent=$4
-    WHERE id=$5
+    SET ${updates.join(", ")}
+    WHERE id = $${values.length}
     RETURNING *
     `,
-		[name, description, price, discount_percent, id]
+		values
 	)
 
 	res.json(result.rows[0])
 })
 
-app.delete("/products/:id", adminOnly, async (req, res) => {
-	const { id } = req.params
+app.delete("/products/:id", auth, adminOnly, async (req, res) => {
+	const id = Number(req.params.id)
+	if (isNaN(id)) return res.status(400).json({ message: "invalid id" })
 
 	await pool.query(
 		"DELETE FROM products WHERE id=$1",
@@ -301,7 +336,7 @@ app.get("/cart", auth, async (req, res) => {
 
 	const result = await pool.query(
 		`
-		SELECT cart_items.*, products.name, products.price
+		SELECT cart_items.*, products.*
 		FROM cart_items
 		JOIN products ON products.id = cart_items.product_id
 		WHERE cart_items.user_id = $1
