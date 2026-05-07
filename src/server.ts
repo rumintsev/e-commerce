@@ -333,7 +333,6 @@ app.delete("/products/:id", auth, adminOnly, async (req, res) => {
 
 app.get("/cart", auth, async (req, res) => {
 	const userId = res.locals.user.userId
-
 	const result = await pool.query(
 		`
 		SELECT cart_items.*, products.*
@@ -347,7 +346,77 @@ app.get("/cart", auth, async (req, res) => {
 	res.json(result.rows)
 })
 
-app.get("/orders/user", auth, async (req, res) => {
+app.post("/cart/add", auth, async (req, res) => {
+	const userId = res.locals.user.userId
+	const { productId, quantity } = req.body
+
+	const result = await pool.query(
+		`
+    INSERT INTO cart_items(userId,productId,quantity)
+    VALUES ($1,$2,$3)
+    RETURNING *
+    `,
+		[userId, productId, quantity]
+	)
+
+	res.json(result.rows[0])
+})
+
+app.delete("/cart/remove/:productId", auth, async (req, res) => {
+	const userId = res.locals.user.userId
+	const { productId } = req.params
+
+	const result = await pool.query(
+		`
+		DELETE FROM cart_items
+		WHERE user_id = $1 AND product_id = $2
+		RETURNING *
+		`,
+		[userId, productId]
+	)
+
+	if (result.rowCount === 0) {
+		return res.status(404).json({ message: "item not found in cart" })
+	}
+
+	res.json(result.rows[0])
+})
+
+app.put("/cart/items/:productId", auth, async (req, res) => {
+	const userId = res.locals.user.userId
+	const { productId } = req.params
+	const { quantity } = req.body
+
+	if (
+		typeof quantity !== "number" ||
+		!Number.isInteger(quantity) ||
+		quantity < 1
+	) {
+		return res.status(400).json({
+			message: "quantity must be a positive integer"
+		})
+	}
+
+	const result = await pool.query(
+		`
+		UPDATE cart_items
+		SET quantity = $1
+		WHERE user_id = $2 AND product_id = $3
+		RETURNING *
+		`,
+		[quantity, userId, productId]
+	)
+
+	if (result.rowCount === 0) {
+		return res.status(404).json({
+			message: "item not found in cart"
+		})
+	}
+
+	res.json(result.rows[0])
+})
+
+app.get("/orders", auth, async (req, res) => {
 	const userId = res.locals.user.userId
 
 	const result = await pool.query(
@@ -358,34 +427,62 @@ app.get("/orders/user", auth, async (req, res) => {
 	res.json(result.rows)
 })
 
-app.post("/cart/add", auth, async (req, res) => {
-	const { user_id, product_id, quantity } = req.body
-
-	const result = await pool.query(
-		`
-    INSERT INTO cart_items(user_id,product_id,quantity)
-    VALUES ($1,$2,$3)
-    RETURNING *
-    `,
-		[user_id, product_id, quantity]
-	)
-
-	res.json(result.rows[0])
-})
-
 app.post("/orders", auth, async (req, res) => {
-	const { user_id, total_price } = req.body
+	const userId = res.locals.user.userId
 
-	const result = await pool.query(
+	const cart = await pool.query(
 		`
-    INSERT INTO orders(user_id,total_price,status)
-    VALUES ($1,$2,'pending')
-    RETURNING *
-    `,
-		[user_id, total_price]
+		SELECT cart_items.*, products.price, products.discount_percent
+		FROM cart_items
+		JOIN products ON products.id = cart_items.product_id
+		WHERE cart_items.user_id = $1
+		`,
+		[userId]
 	)
 
-	res.json(result.rows[0])
+	if (cart.rowCount === 0) {
+		return res.status(400).json({ message: "cart is empty" })
+	}
+
+	const orderResult = await pool.query(
+		`
+		INSERT INTO orders(user_id, status)
+		VALUES ($1, 'pending')
+		RETURNING *
+		`,
+		[userId]
+	)
+
+	const order = orderResult.rows[0]
+
+	for (const item of cart.rows) {
+		await pool.query(
+			`
+			INSERT INTO order_items(
+				order_id,
+				product_id,
+				quantity,
+				price_at_purchase,
+				discount_at_purchase
+			)
+			VALUES ($1,$2,$3,$4,$5)
+			`,
+			[
+				order.id,
+				item.product_id,
+				item.quantity,
+				item.price,
+				item.discount_percent
+			]
+		)
+	}
+
+	await pool.query(
+		`DELETE FROM cart_items WHERE user_id = $1`,
+		[userId]
+	)
+
+	res.json(order)
 })
 
 app.listen(PORT, () => {

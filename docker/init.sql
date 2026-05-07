@@ -30,18 +30,19 @@ CREATE TABLE cart_items (
 
 CREATE TABLE orders (
   id SERIAL PRIMARY KEY,
-  user_id INT,
-  total_price NUMERIC,
-  status TEXT,
+  user_id INT NOT NULL,
+  total_price NUMERIC NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items (
   id SERIAL PRIMARY KEY,
-  order_id INT,
-  product_id INT,
-  quantity INT,
-  price NUMERIC
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  price NUMERIC NOT NULL,
+  discount_percent NUMERIC NOT NULL DEFAULT 0
 );
 
 -- TEST DATA
