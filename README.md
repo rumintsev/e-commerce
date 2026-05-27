@@ -4,9 +4,34 @@
 - Node.js
 - Docker
 
-## Первый запуск
+## Backend
+
+```bash
+cd docker && docker compose up -d
+cd ../backend
+npm install
+npm run build
+npm run start
+```
+
+API: http://localhost:3000
+
+## Frontend (Next.js)
+
+```bash
+cd frontend
+cp .env.example .env.local   # при необходимости
+npm install
+npm run dev
+```
+
+Приложение: http://localhost:3001
+
+## Первый запуск (legacy, корень репозитория)
 
 ```
+docker compose up -d
+docker compose down -v
 docker compose up -d
 npm install
 npm run build
