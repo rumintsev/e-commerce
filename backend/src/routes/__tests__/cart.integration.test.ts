@@ -30,9 +30,8 @@ beforeAll(async () => {
 		('Apples', 'Juicy apples', 2.12, 2.35, 5, TRUE, 'img1.jpg'),
 		('Bananas', 'Juicy bananas', 1.25, 1.35, 2, TRUE, 'img2.jpg')
     RETURNING id;`, []);
-	productIds = products.rows.map(row => row.id);
-	console.log("Inserted product IDs:", productIds);
 	client.release();
+	productIds = products.rows.map(row => row.id);
 });
 
 beforeEach(async () => {
@@ -141,12 +140,12 @@ describe("Cart endpoints", () => {
 
 	describe("PUT /cart/:id", () => {
 		it("Updates the quantity of an item in the cart", async () => {
-			const res1 = await request(app)
+			await request(app)
 				.post(`/cart/${productIds[0]}`)
 				.set("Authorization", `Bearer ${token}`)
 				.send({ quantity: 5 });
 
-			const res2 = await request(app)
+			await request(app)
 				.put(`/cart/${productIds[0]}`)
 				.set("Authorization", `Bearer ${token}`)
 				.send({ quantity: 2 });

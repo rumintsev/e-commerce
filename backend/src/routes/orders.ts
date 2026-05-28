@@ -31,6 +31,38 @@ router.get("/", auth, async (req: Request, res: Response) => {
 	res.json(result.rows);
 });
 
+router.get("/:id", auth, async (req: Request, res: Response) => {
+    const userId = getUser(res)!.userId;
+    const orderId = Number(req.params.id);
+
+    if (isNaN(orderId)) {
+        return res.status(400).json({ message: "Invalid order ID" });
+    }
+
+    const result = await pool.query(`
+        SELECT 
+            orders.id AS order_id,
+            orders.status,
+            orders.created_at,
+            orders.updated_at,
+            order_items.quantity,
+            order_items.price,
+            products.id AS product_id,
+            products.name,
+            products.image_url
+        FROM orders
+        JOIN order_items ON order_items.order_id = orders.id
+        JOIN products ON products.id = order_items.product_id
+        WHERE orders.user_id = $1 AND orders.id = $2`,
+        [userId, orderId]);
+
+    if (result.rowCount === 0) {
+        return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(result.rows);
+});
+
 router.post("/", auth, async (req: Request, res: Response) => {
 	const userId = getUser(res)!.userId;
 
@@ -82,7 +114,7 @@ router.post("/", auth, async (req: Request, res: Response) => {
 	res.json(order);
 });
 
-router.patch("/:id", adminOnly, async (req: Request, res: Response) => {
+router.patch("/:id", auth, adminOnly, async (req: Request, res: Response) => {
 	const orderId = Number(req.params.id);
 
 	if (isNaN(orderId)) {
