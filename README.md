@@ -27,17 +27,6 @@ npm run dev
 
 Приложение: http://localhost:3001
 
-## Первый запуск (legacy, корень репозитория)
-
-```
-docker compose up -d
-docker compose down -v
-docker compose up -d
-npm install
-npm run build
-npm run start
-```
-
 При инициализации есть 2 пользователя: user@test.com, admin@test.com, 
 у обоих пароль -- password, если const SECRET = "secret", 
 при замене на process.env.JWT_SECRET пароли в базе нужно поменять
@@ -48,7 +37,7 @@ npm run start
 docker compose down -v
 ```
 
-## Отчистить бд (инициализация бд)
+## Работа с контейнером бд
 
 ```
 docker compose down -v

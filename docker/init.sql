@@ -2,31 +2,31 @@
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  name TEXT,
+  name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  role TEXT
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  role TEXT NOT NULL DEFAULT 'user'
 );
 
 CREATE TABLE products (
   id SERIAL PRIMARY KEY,
-  name TEXT DEFAULT 'Название',
-  description TEXT DEFAULT 'Описание',
-  price NUMERIC DEFAULT 0,
+  name TEXT NOT NULL DEFAULT 'Название',
+  description TEXT NOT NULL DEFAULT 'Описание',
+  price NUMERIC NOT NULL DEFAULT 0,
   old_price NUMERIC,
-  quantity INT DEFAULT 0,
-  visibility BOOLEAN DEFAULT TRUE,
-  image_url TEXT DEFAULT 'default.png',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  quantity INT NOT NULL DEFAULT 0,
+  visibility BOOLEAN NOT NULL DEFAULT TRUE,
+  image_url TEXT NOT NULL DEFAULT 'default.png',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP 
 );
 
 CREATE TABLE cart_items (
   id SERIAL PRIMARY KEY,
-  user_id INT,
-  product_id INT,
-  quantity INT,
+  user_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
 	UNIQUE (user_id, product_id)
 );
 
@@ -35,7 +35,7 @@ CREATE TABLE orders (
   user_id INT NOT NULL,
   status TEXT NOT NULL DEFAULT 'created',
 	-- created, confirmed, shipped, delivered, cancelled
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP
 );
 

@@ -351,4 +351,7 @@
 	.cartPage .itemSubtotal {
 		display: none;
 	}
+	.cartPage .qCount {
+	min-width: 0px;
+}
 }
