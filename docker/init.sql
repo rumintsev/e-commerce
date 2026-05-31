@@ -18,7 +18,8 @@ CREATE TABLE products (
   quantity INT DEFAULT 0,
   visibility BOOLEAN DEFAULT TRUE,
   image_url TEXT DEFAULT 'default.png',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP 
 );
 
 CREATE TABLE cart_items (
@@ -51,11 +52,19 @@ INSERT INTO users (name, email, password, role) VALUES
 ('Admin', 'admin@test.com', '$2b$10$fVvjhi7okak2Gh7AO8usHeFn3MDJw3hiF9QcKHchdC/LfjmceiNJK', 'admin'),
 ('User', 'user@test.com', '$2b$10$fVvjhi7okak2Gh7AO8usHeFn3MDJw3hiF9QcKHchdC/LfjmceiNJK', 'user');
 
-INSERT INTO products (name, description, price, old_price, quantity, visibility, image_url) VALUES
-('Apples', 'Juicy apples', 2.12, 2.35, 5, TRUE, 'img1.jpg'),
-('Bananas', 'Juicy bananas', 1.25, 1.35, 2, TRUE, 'img2.jpg'),
-('Grapes', 'Juicy grapes', 3.75, 3.95, 1, TRUE, 'img3.jpg'),
-('Grapefruit', 'Juicy Grapefruits', 3.75, 3.90, 1, FALSE, 'img4.jpg');
+INSERT INTO products(name, description, price, old_price, quantity, visibility, image_url) VALUES
+('Ananas', 'Sweet tropical pineapple, freshly harvested', 2.12, NULL, 5, TRUE, 'Ananas.jpg'),
+('Butternut', 'Tender butternut squash, perfect for soups', 1.25, 1.35, 2, TRUE, 'Butternut.jpg'),
+('Custard apple', 'Creamy custard apple with a delicate vanilla flavour', 3.75, 3.95, 1, TRUE, 'Custard_apple.jpg'),
+('Dragon fruit', 'Vibrant dragon fruit, rich in antioxidants', 3.20, 3.90, 3, TRUE, 'Dragon_fruit.jpg'),
+('Orange', 'Sun-ripened juicy oranges, full of vitamin C', 1.49, 1.75, 8, TRUE, 'Orange.jpg'),
+('Passion fruit', 'Intensely aromatic passion fruit from the tropics', 2.99, 3.90, 2, TRUE, 'Passion_fruit.jpg'),
+('Peache', 'Ripe, fragrant peaches with silky smooth skin', 1.89, 2.49, 4, TRUE, 'Peache.jpg'),
+('Pear', 'Crisp and sweet conference pears, locally grown', 1.59, 1.90, 6, TRUE, 'Pear.jpg'),
+('Pepper', 'Bright and crunchy bell peppers, mix of colours', 2.10, 2.90, 3, TRUE, 'Pepper.jpg'),
+('Puriri', 'Rare New Zealand puriri berries, limited stock', 3.10, 4.20, 2, TRUE, 'Puriri.jpg'),
+('Rambutan', 'Exotic rambutan — sweet, juicy and freshly imported', 2.79, 3.90, 1, TRUE, 'Rambutan.jpg'),
+('Strawberry', 'Hand-picked garden strawberries, bursting with flavour', 2.49, 3.90, 5, TRUE, 'Strawberry.jpg');
 
 INSERT INTO cart_items (user_id, product_id, quantity) VALUES
 (1, 1, 1),

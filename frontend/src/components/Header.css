@@ -1,0 +1,145 @@
+.header {
+	border-bottom: 1px solid var(--colorBorder);
+	background: var(--colorSurface);
+}
+
+.headerInner {
+	max-width: var(--maxWidth);
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 18px var(--sidePadding);
+	gap: 10px;
+}
+
+.headerTitle {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+	color: var(--colorText);
+	text-decoration: none;
+}
+
+.headerTitle h1 {
+	margin: 0;
+}
+
+/* search */
+
+.headerSearch {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	border: 1px solid var(--colorBorder);
+	border-radius: 8px;
+	background: var(--colorBackground);
+	overflow: hidden;
+	transition: border-color 0.15s;
+}
+
+.headerSearch:focus-within {
+	border-color: var(--colorPrimary, #4f46e5);
+}
+
+.headerSearchInput {
+	flex: 1;
+	border: none;
+	background: transparent;
+	padding: 0.5rem 0.75rem;
+	font-size: 0.875rem;
+	color: inherit;
+	outline: none;
+}
+
+.headerSearchInput::placeholder {
+	color: var(--colorTextMuted);
+}
+
+.headerSearchBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 0.75rem;
+	height: 38px;
+	background: transparent;
+	border: none;
+	border-left: 1px solid var(--colorBorder);
+	cursor: pointer;
+	color: var(--colorTextMuted);
+	transition: background 0.15s, color 0.15s;
+}
+
+.headerSearchBtn:hover {
+	background: var(--colorSurfaceHover);
+	color: var(--colorText);
+}
+
+/* buttons */
+
+.headerActions {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.headerActionBtn {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	cursor: pointer;
+	color: var(--colorTextMuted);
+	transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.headerActionBtn:hover {
+	background: var(--colorSurfaceHover);
+	border-color: var(--colorBorder);
+	color: var(--colorText);
+}
+
+.headerCartBadge {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 3px;
+	border-radius: 999px;
+	background: #e24b4a;
+	color: #fff;
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 16px;
+	text-align: center;
+	pointer-events: none;
+}
+
+@media (max-width: 750px) {
+	.headerInner {
+		flex-wrap: wrap;
+	}
+
+	.headerSearch {
+		order: 3;
+		flex-basis: 100%;
+	}
+
+	.headerActions {
+		order: 2;
+		margin-left: auto;
+	}
+
+	.headerTitle {
+		order: 1;
+	}
+}

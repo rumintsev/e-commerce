@@ -1,0 +1,363 @@
+.profilePage {
+	width: 100%;
+	max-width: var(--maxWidth);
+	margin: 0 auto;
+	padding: 25px var(--sidePadding);
+}
+
+/* auth window */
+
+.profilePage .auth {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.profilePage .authContent {
+	width: 100%;
+	max-width: 440px;
+	background: var(--colorSurface);
+	border-radius: 20px;
+	padding: 20px;
+}
+
+.profilePage .form {
+	display: flex;
+	flex-direction: column;
+	gap: 25px;
+}
+
+.profilePage .field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px
+}
+
+.profilePage .field span {
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--colorText)
+}
+
+.profilePage .field input {
+	padding: 0.6rem 0.9rem;
+	border: 0.3px solid var(--colorBorder);
+	border-radius: 10px;
+	font-size: 15px;
+	background: var(--color-background-primary);
+	color: var(--color-text-primary);
+	outline: none;
+	transition: border-color .15s
+}
+
+.profilePage .field input:focus {
+	border-color: var(--colorMuted);
+}
+
+.profilePage .field input::placeholder {
+	font-size: 16px;
+	color: var(--colorText);
+	opacity: 0.5;
+}
+
+.profilePage .submit {
+	width: 100%;
+	padding: 0.7rem;
+	border: none;
+	border-radius: 10px;
+	background: #0d8fcb;
+	color: white;
+	font-size: 16px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity .15s;
+	margin-top: 12px;
+}
+
+.profilePage .submit:hover {
+	opacity: 0.9;
+}
+
+.profilePage .divider {
+	text-align: center;
+	font-size: 16px;
+}
+
+.profilePage .divider span {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+/* dashboard window */
+
+.profilePage .dashboard {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	width: 100%;
+	margin: 0 auto;
+}
+
+.profilePage .userCard {
+	background: var(--colorSurface);
+	border-radius: 20px;
+	padding: 20px;
+}
+
+.profilePage .userInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.profilePage .userInfo h2 {
+	font-size: 20px;
+	font-weight: 600;
+	margin: 0;
+	color: var(--colorText);
+	display: flex;
+	align-items: center;
+}
+
+.profilePage .userInfo p {
+	font-size: 15px;
+	color: var(--colorMuted);
+	margin: 0;
+}
+
+.profilePage .adminLink {
+	margin: 0 0 0 16px;
+	background: #00aeff22;
+	color: #007eb9;
+	width: fit-content;
+	padding: 4px 12px;
+	border: 0.3px solid #00aeff22;
+	border-radius: 10px;
+	font-size: 14px;
+	cursor: pointer;
+	transition: opacity .15s;
+	text-decoration: none;
+}
+
+.profilePage .adminLink:hover {
+	opacity: 0.8;
+}
+
+.profilePage .btnSignOut {
+	margin-top: 8px;
+	width: fit-content;
+	padding: 0.5rem 1.1rem;
+	border: 0.3px solid var(--colorBorder);
+	border-radius: 10px;
+	background: transparent;
+	color: var(--colorText);
+	font-size: 14px;
+	cursor: pointer;
+	transition: opacity .15s;
+}
+
+.profilePage .btnSignOut:hover {
+	opacity: 0.6;
+}
+
+.profilePage .ordersSection {
+	background: var(--colorSurface);
+	border-radius: 20px;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.profilePage .sectionTitle {
+	font-size: 17px;
+	font-weight: 600;
+	margin: 0 0 4px;
+	color: var(--colorText);
+}
+
+.profilePage .ordersLoading {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.profilePage .skeleton {
+	height: 56px;
+	border-radius: 12px;
+	background: var(--colorBorder);
+	opacity: 0.4;
+}
+
+.profilePage .empty {
+	text-align: center;
+	padding: 32px 0;
+	color: var(--colorText);
+	opacity: 0.45;
+	font-size: 15px;
+}
+
+.profilePage .ordersList {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.profilePage .orderCard {
+	border: 0.3px solid var(--colorBorder);
+	border-radius: 14px;
+	overflow: hidden;
+}
+
+.profilePage .orderSummary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 18px;
+	cursor: pointer;
+	list-style: none;
+	gap: 12px;
+	transition: background 0.15s;
+}
+
+.profilePage .orderSummary:hover {
+	opacity: 0.8;
+}
+
+.profilePage .orderSummary::-webkit-details-marker {
+	display: none;
+}
+
+.profilePage .orderMeta {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.profilePage .orderId {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--colorText);
+}
+
+.profilePage .orderDate {
+	font-size: 13px;
+	color: var(--colorText);
+	opacity: 0.5;
+}
+
+.profilePage .orderRight {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.profilePage .statusBadge {
+	font-size: 12px;
+	font-weight: 600;
+	padding: 3px 10px;
+	border-radius: 8px;
+}
+
+.profilePage .status-created {
+	background: rgba(13, 143, 203, 0.12);
+	color: #0d8fcb;
+}
+
+.profilePage .status-confirmed {
+	background: rgba(120, 86, 220, 0.12);
+	color: #7856dc;
+}
+
+.profilePage .status-shipped {
+	background: rgba(230, 140, 30, 0.12);
+	color: #c47a10;
+}
+
+.profilePage .status-delivered {
+	background: rgba(26, 158, 90, 0.12);
+	color: #1a9e5a;
+}
+
+.profilePage .status-cancelled {
+	background: rgba(224, 82, 82, 0.1);
+	color: #e05252;
+}
+
+.profilePage .orderTotalOfOrder {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--colorText);
+}
+
+.profilePage .chevron {
+	font-size: 18px;
+	color: var(--colorText);
+	opacity: 0.35;
+	transition: transform .2s;
+}
+
+.profilePage details[open] .chevron {
+	transform: rotate(90deg);
+}
+
+/* Items list */
+.profilePage .itemsList {
+	list-style: none;
+	margin: 0;
+	padding: 0 18px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border-top: 0.3px solid var(--colorBorder);
+}
+
+.profilePage .itemRow {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding-top: 10px;
+}
+
+.profilePage .itemImg {
+	width: 72px;
+	aspect-ratio: 3 / 4;
+	border-radius: 8px;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+.profilePage .itemImg--placeholder {
+	background: var(--colorBorder);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20px;
+}
+
+.profilePage .itemInfo {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.profilePage .itemName {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--colorText);
+}
+
+.profilePage .itemQty {
+	font-size: 13px;
+	color: var(--colorText);
+	opacity: 0.5;
+}
+
+.profilePage .itemPrice {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--colorText);
+	flex-shrink: 0;
+}

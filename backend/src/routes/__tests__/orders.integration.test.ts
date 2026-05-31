@@ -65,15 +65,13 @@ beforeEach(async () => {
 
 afterAll(async () => {
 	client = await pool.connect();
-	const res1 = await client.query(`DELETE FROM products WHERE id = ANY($1);`, [productIds]);
-	const res2 = await client.query(`DELETE FROM cart_items WHERE user_id = ANY($1)`, [[userId, adminId]]);
-	const res3 = await client.query(`DELETE FROM order_items WHERE order_id IN 
+	await client.query(`DELETE FROM products WHERE id = ANY($1);`, [productIds]);
+	await client.query(`DELETE FROM cart_items WHERE user_id = ANY($1)`, [[userId, adminId]]);
+	await client.query(`DELETE FROM order_items WHERE order_id IN 
 		(SELECT id FROM orders WHERE user_id = ANY($1))`, [[userId, adminId]],
 	);
-	const res4 = await client.query(`DELETE FROM orders WHERE user_id = ANY($1)`, [[userId, adminId]]);
-	const res5 = await client.query(`SELECT * FROM cart_items WHERE user_id = ANY($1)`, [[userId, adminId]]);
-	console.log(res1.rowCount, res2.rowCount, res3.rowCount, res4.rowCount);
-	console.log("Remaining cart items:", res5.rows);
+	await client.query(`DELETE FROM orders WHERE user_id = ANY($1)`, [[userId, adminId]]);
+	await client.query(`SELECT * FROM cart_items WHERE user_id = ANY($1)`, [[userId, adminId]]);
 
 	await client.query(`INSERT INTO cart_items (user_id, product_id, quantity) VALUES 
 		(1, 1, 1),

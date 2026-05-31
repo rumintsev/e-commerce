@@ -66,6 +66,7 @@ router.get("/", auth, async (req: Request, res: Response) => {
 
 // add item to cart
 // params: { productId }
+// body: { quantity }
 router.post("/:productId", auth, async (req: Request, res: Response) => {
 	const userId = getUser(res)!.userId;
 	const productId = Number(req.params.productId);

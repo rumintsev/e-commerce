@@ -31,15 +31,34 @@ router.get("/", auth, async (req: Request, res: Response) => {
 	res.json(result.rows);
 });
 
+router.get("/all", auth, adminOnly, async (req: Request, res: Response) => {
+	const result = await pool.query(`
+		SELECT 
+			orders.id AS order_id,
+			orders.status,
+			orders.created_at,
+			orders.updated_at,
+			order_items.quantity,
+			order_items.price,
+			products.id AS product_id,
+			products.name,
+			products.image_url
+		FROM orders
+		JOIN order_items ON order_items.order_id = orders.id
+		JOIN products ON products.id = order_items.product_id`);
+
+	res.json(result.rows);
+});
+
 router.get("/:id", auth, async (req: Request, res: Response) => {
-    const userId = getUser(res)!.userId;
-    const orderId = Number(req.params.id);
+	const userId = getUser(res)!.userId;
+	const orderId = Number(req.params.id);
 
-    if (isNaN(orderId)) {
-        return res.status(400).json({ message: "Invalid order ID" });
-    }
+	if (isNaN(orderId)) {
+		return res.status(400).json({ message: "Invalid order ID" });
+	}
 
-    const result = await pool.query(`
+	const result = await pool.query(`
         SELECT 
             orders.id AS order_id,
             orders.status,
@@ -54,64 +73,92 @@ router.get("/:id", auth, async (req: Request, res: Response) => {
         JOIN order_items ON order_items.order_id = orders.id
         JOIN products ON products.id = order_items.product_id
         WHERE orders.user_id = $1 AND orders.id = $2`,
-        [userId, orderId]);
+		[userId, orderId]);
 
-    if (result.rowCount === 0) {
-        return res.status(404).json({ message: "Order not found" });
-    }
+	if (result.rowCount === 0) {
+		return res.status(404).json({ message: "Order not found" });
+	}
 
-    res.json(result.rows);
+	res.json(result.rows);
 });
 
 router.post("/", auth, async (req: Request, res: Response) => {
 	const userId = getUser(res)!.userId;
 
-	const cart = await pool.query(
-		`
-    SELECT 
-			cart_items.quantity,
-			cart_items.product_id,
-			products.price
-		FROM cart_items
-		JOIN products ON products.id = cart_items.product_id
-		WHERE cart_items.user_id = $1
-    `,
-		[userId],
-	);
+	const client = await pool.connect();
 
-	if (cart.rowCount === 0) {
-		return res.status(400).json({ message: "Cart is empty" });
-	}
+	try {
+		await client.query("BEGIN");
 
-	const orderResult = await pool.query(
-		`
-    INSERT INTO orders(user_id, status)
-    VALUES ($1, 'created')
-    RETURNING *
-    `,
-		[userId],
-	);
-
-	const order = orderResult.rows[0];
-
-	for (const item of cart.rows) {
-		await pool.query(
+		const cart = await client.query(
 			`
-      INSERT INTO order_items(order_id, product_id, quantity, price)
-      VALUES ($1, $2, $3, $4)
-      `,
-			[
-				order.id,
-				item.product_id,
-				item.quantity,
-				item.price,
-			],
+			SELECT 
+				cart_items.quantity,
+				cart_items.product_id,
+				products.price,
+				products.quantity AS stock
+			FROM cart_items
+			JOIN products ON products.id = cart_items.product_id
+			WHERE cart_items.user_id = $1
+			`,
+			[userId],
 		);
+
+		if (cart.rowCount === 0) {
+			await client.query("ROLLBACK");
+			return res.status(400).json({ message: "Cart is empty" });
+		}
+
+		for (const item of cart.rows) {
+			if (item.stock < item.quantity) {
+				await client.query("ROLLBACK");
+				return res.status(400).json({
+					message: `Not enough stock for product ID`,
+				});
+			}
+		}
+
+		const orderResult = await client.query(
+			`
+			INSERT INTO orders(user_id, status)
+			VALUES ($1, 'created')
+			RETURNING *
+			`,
+			[userId],
+		);
+
+		const order = orderResult.rows[0];
+
+		for (const item of cart.rows) {
+			await client.query(
+				`
+				INSERT INTO order_items(order_id, product_id, quantity, price)
+				VALUES ($1, $2, $3, $4)
+				`,
+				[order.id, item.product_id, item.quantity, item.price],
+			);
+
+			await client.query(
+				`
+				UPDATE products
+				SET quantity = quantity - $1, updated_at = CURRENT_TIMESTAMP
+				WHERE id = $2
+				`,
+				[item.quantity, item.product_id],
+			);
+		}
+
+		await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
+
+		await client.query("COMMIT");
+
+		res.json(order);
+	} catch (err) {
+		await client.query("ROLLBACK");
+		throw err;
+	} finally {
+		client.release();
 	}
-
-	await pool.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
-
-	res.json(order);
 });
 
 router.patch("/:id", auth, adminOnly, async (req: Request, res: Response) => {

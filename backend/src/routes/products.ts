@@ -35,18 +35,24 @@ router.get("/", authOptional, async (req: Request, res: Response) => {
 			conditions.push(`name ILIKE $${values.length}`);
 		}
 
-		if (!user || user.role !== "admin") {
+		const isAdmin = user?.role === "admin";
+
+		if (!isAdmin) {
 			conditions.push("visibility = true");
 		}
 
 		const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
-		values.push(limit);
+		values.push(limit + 1); // +1 for hasMore check
 		values.push(offset);
+
+		const fields = isAdmin
+			? "id, name, price, old_price, quantity, visibility, image_url, created_at, updated_at"
+			: "id, name, price, old_price, quantity, image_url";
 
 		const result = await pool.query(
 			`
-      SELECT *
+      SELECT ${fields}
       FROM products
       ${where}
       ORDER BY id
@@ -55,8 +61,10 @@ router.get("/", authOptional, async (req: Request, res: Response) => {
       `,
 			values,
 		);
+		const hasNextPage = result.rows.length > limit;
+		const items = hasNextPage ? result.rows.slice(0, limit) : result.rows;
 
-		res.json(result.rows);
+		res.json({ items, hasNextPage });
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Database error" });

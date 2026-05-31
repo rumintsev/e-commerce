@@ -1,0 +1,62 @@
+.productGrid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 25px 15px;
+	grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 750px) {
+	.productGrid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.productCard {
+	background: var(--colorSurface);
+}
+
+.productName {
+	margin: 0;
+	font-weight: 500;
+}
+
+.productPriceRow {
+	margin: 8px 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 0.75rem;
+}
+
+.currentPrice {
+	font-size: 1.1rem;
+	font-weight: 600;
+}
+
+.oldPrice {
+	font-size: 0.9rem;
+	color: var(--colorMuted);
+	text-decoration: line-through;
+}
+
+.productDiscount {
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--colorAccent);
+}
+
+.productImageWrapper {
+	display: block;
+	aspect-ratio: 3 / 4;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.productImage {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
